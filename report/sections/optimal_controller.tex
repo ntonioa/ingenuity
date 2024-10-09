@@ -1,0 +1,160 @@
+\section{Optimal controller}
+The aim of this section is to design an optimal control law that exploits the DDP algorithm in such a way that a nonlinear system (such as a robot) is led to an objective optimally with respect to some cost. 
+
+\subsection{Hard input constraints}
+Within the robotics field, actuators are often subject to saturation limits. In the case of revolute joints, the torque that can be applied is limited by the maximum torque that the motor can supply. The presence of these limitations translates into the birth of hard constraints on the input of the form of \ref{eq:input_constraints}, referred to as \textit{box constraints}. \\
+We propose three alternatives derived from \cite{tassa14} to handle these constraints.
+
+\subsubsection{Naive clamping}
+A simple way to handle the constraints is to clamp the control input in the forward sweep to the limits of the box constraints. The operation performed element-wise on the control input vector $u$ is:
+\begin{equation*}
+    \mathcal{N}\mathcal{C}(u) =\min\{\max\{u, u_{\text{min}}\}, u_{\text{max}}\}.
+\end{equation*}
+As a consequence, \ref{eq:u_update_alpha} becomes:
+\begin{equation}
+    u^i = \mathcal{N}\mathcal{C}(\overline{u}^i + \alpha k^i + K^i (x^i - \overline{x}^i)). \label{eq:u_update_alpha_clamp}
+\end{equation} 
+The drawback of such a trivial intervention is that the clamped search direction may not be feasible anymore, compromising convergence.
+
+\subsubsection{Squashing functions}
+Another way to enforce the constraints is to use component-wise sigmoidal squashing functions, such as the following.
+
+\begin{equation*}
+    \mathcal{S}(u) = \frac{u_{\text{max}} - u_{\text{min}}}{2} \tanh\frac{2\,u}{u_{\text{max}} - u_{\text{min}}} + \frac{u_{\text{max}} + u_{\text{min}}}{2},
+\end{equation*}
+where the hyperbolic tangent is used to squash the input to the interval $[u_{\text{min}}, u_{\text{max}}]$:
+\begin{equation*}
+    \lim_{u \to -\infty} \mathcal{S}(u) = u_{\text{min}}, \quad \lim_{u \to +\infty} \mathcal{S}(u) = u_{\text{max}}.
+\end{equation*}
+Correspondigly, the update rule for the control input \ref{eq:u_update_alpha} becomes:
+\begin{equation}
+    u^i = \mathcal{S}(\overline{u}^i + \alpha k^i + K^i (x^i - \overline{x}^i)). \label{eq:u_update_alpha_squash}
+\end{equation}
+In the cost function, the unmodified control inputs should be used in order to prevent their explosion. 
+Altough the squashing function is differentiable, its nonlinearity is not well captured by the quadratic approximation of the dynamics that is being performed in the backward pass. This may lead to suboptimal solutions or even convergence issues.
+
+\subsubsection{Constrained quadratic programming}
+The best-performing method to take into account the control limitations is to condition, through the constraints, the minimization of the quadratic model of the Q-function.\\
+At the moment, the solution \ref{eq:deltau_star} is valid in the unconstrained case. To include the constraints, the idea is to solve the following constrained quadratic program:
+\begin{equation*}
+    \begin{aligned}
+        \min_{\delta u} \quad & Q(\overline{x} + \delta x, \overline{u} + \delta u) \\
+        \text{s.t.} \quad & u_{\text{min}} \leq \overline{u} + \delta u \leq u_{\text{max}}.
+    \end{aligned}
+\end{equation*}
+With reference to \ref{eq:qfun_taylor}, we know that the minimization argument depends both on $\delta x$ and $\delta u$. Being $\delta u$ the minimization variable, since $\delta x$ is unknown during the backward sweep, a direct solution can be found only for the feedforward term:
+\begin{equation}
+    \begin{aligned}
+        k = \text{arg}\min_{\delta u} & \left\{Q_u ^\top \delta u + \frac{1}{2} \delta u^\top Q_{uu} \delta u \right\}\\
+        \text{s.t.} \;& \;\,u_{\text{min}} \leq \overline{u} + \delta u \leq u_{\text{max}},
+    \end{aligned} \label{eq:k_qp}
+\end{equation}
+which replaces \ref{eq:k}.\\
+In order to find the feedback term $K$, the Hessian $Q_{uu}$ must be decomposed as $Q_{uu} = Q_{uu}^f + Q_{uu}^c$, where $Q_{uu}^f$ is the submatrix corresponding to the free dimensions of the control input, and $Q_{uu}^c$ is the submatrix corresponding to the clamped dimensions. Then, instead of \ref{eq:K}, the feedback term is computed as:
+\begin{equation}
+    K = -Q_{uu}^f Q_{ux}, \label{eq:K_qp}
+\end{equation} 
+implying that the rows of $K$ corresponding to clamped controls are identically zero.\\
+In addition, we have found that applying the naive clamping on top of this in the forward sweep ensures the feasibility of the input even in the event that, despite the control dimension falling within the free section of $Q_{uu}$, the action of the feedback term on the state deviation causes the control to exceed its boundaries.
+
+\subsection{Receding-horizon control}
+Following the proposed scheme, the DDP algorithm can certainly identify an optimal control sequence that, combined with the nominal dynamics of the system, returns a state evolution that satisfies a high-level objective. In order to design a control law inducing the system to perform its intended task with robustness guarantees with respect to model uncertainty and possible presence of disturbances, we propose to enrich the algorithm with a receding horizon control logic, in the spirit of Model Predictive Control (MPC).
+
+Briefly, the idea is to apply the DDP algorithm at each time step, considering the current state as the initial state, and the current control sequence as the initial guess. The first control input of the optimal sequence is then applied to the system, and the process is repeated at the next time step. This way, the control law is updated at each time step, and the system is driven to the desired state in a receding horizon fashion.\\
+To this end, crucial is the computation of the very first control sequence, which should be carried out employing enough resources to identify an optimal (or close to the optimal) trajectory. The following iterations, on the other hand, can be performed with less computational effort, since the algorithm is already warm-started with a good initial guess, therefore allowing for real-time applications.
+
+\subsection{Implementation}
+We investigate the implementation of the control algorithm in the following pseudocode. The algorithm is composed of four main functions, respectively implementing the backward sweep, the forward sweep, one single iteration of the DDP algorithm and the whole receding-horizon controller. 
+
+\begin{figure}[H]
+    \centering
+    \begin{algorithm}[H]
+        \caption{Backward sweep (\textit{bwd})}
+        \label{alg:bwd}
+        \setstretch{1.1}
+        \KwData{$x^0$, $U = \{u^i\}_{i=0}^{N-1}$}
+        \KwResult{$G = \{(k^i, K^i)\}_{i=0}^{N-1}$}
+
+        Compute $X = \{x^i\}_{i=0}^{N}$ by applying recursively \ref{eq:dyn} to $x^0$ with $U$\;
+        Compute $V^\prime_x = l_{f, x}(x^N)$ and $V^\prime_{xx} = l_{f, xx}(x^N)$ according to \ref{eq:vf_N}\;
+
+        \For{$i = N-1, \dots, 0$} {
+            Compute $Q_u$, $Q_x$, $Q_{xx}$, $Q_{uu}$ and $Q_{xu}$ using \ref{eq:qx} - \ref{eq:qxu}\;
+            If necessary, regularize $Q_{uu}$ using \ref{eq:q_uu_reg}\;
+            Compute $k^i$ and $K^i$ using \ref{eq:k_qp} and \ref{eq:K_qp}\;
+            Compute $V_x$ and $V_{xx}$ using \ref{eq:vx} and \ref{eq:vxx}\;
+            Set $V'_x = V_x$ and $V'_{xx} = V_{xx}$\;
+        }
+    \end{algorithm}
+\end{figure}
+
+Starting from an initial state $x^0$ and a control sequence $U$, Algorithm \ref{alg:bwd} realizes the function \textit{bwd}, which computes the gain sequence $G = \{(k^i, K^i)\}_{i=0}^{N-1}$ by iteratively applying the constrained quadratic programming.
+
+Given a nominal trajectory and a sequence of gains, Algorithm \ref{alg:fwd} implements a function named \textit{fwd}, which iteratively computes the modified trajectory by applying the constrained local state-affine policy $\delta u^\star$ to the state deviation, using $\alpha$ as a step-size for the feedforward term.
+
+\begin{figure}[H]
+    \centering
+    \begin{algorithm}[H]
+        \caption{Forward sweep (\textit{fwd})}
+        \label{alg:fwd}
+        \setstretch{1.1}
+        \KwData{$x^0$, $\overline{U} = \{\overline{u}^i\}_{i=0}^{N-1}$, $G = \{(k^i, K^i)\}_{i=0}^{N-1}$, $\alpha$}
+        \KwResult{$U = \{u^i\}_{i=0}^{N-1}$}
+
+        Compute $\overline{X} = \{\overline{x}^i\}_{i=0}^{N}$ by applying recursively \ref{eq:dyn} to $\overline{x}^0 = x^0$ with $\overline{U}$\;
+
+        \For{$i = 0, \dots, N-1$} {
+            Compute $u^i$ using \ref{eq:u_update_alpha}\;
+            Constrain $u^i$ using \ref{eq:u_update_alpha_clamp} or \ref{eq:u_update_alpha_squash}\;
+            Compute $x^{i+1}$ using \ref{eq:dyn}\;
+        }
+    \end{algorithm}
+\end{figure}
+
+Algorithm \ref{alg:ddp} realizes the application of an iteration of DDP, alternating between backward and forward sweeps until the cost converges to a minimum. Moreover, this function executes the line search to find the step size $\alpha$ that leads to a decrease in the cost. If the cost does not decrease, being stuck in the loop signifies that we are already at the minimum, therefore the algorithm stops.
+
+\begin{figure}[H]
+    \centering
+    \begin{algorithm}[H]
+        \caption{DDP iteration (\textit{ddp})}
+        \label{alg:ddp}
+        \setstretch{1.1}
+        \KwData{$x^0$, $U_{\text{init}} = \{u_{\text{init}}^i\}_{i=0}^{N-1}$}
+        \KwResult{$U^\star = \{u^{\star,i}\}_{i=0}^{N-1}$}
+        Initialize $U = U_{\text{init}}$\;
+    
+        \Repeat{$\alpha \approx 0$} {
+            Compute the cost $J$ using \ref{eq:cost}\;
+            Perform a backward sweep $G = \textit{bwd}(x^0, U)$\;
+    
+            Reset $\alpha$\;
+            \Repeat{$\alpha \approx 0 \lor J' < J$}{
+                Perform a forward sweep $U^\prime = \textit{fwd}(x^0, U, G, \alpha)$\;
+                Compute the cost $J^\prime$ using \ref{eq:cost} with $U^\prime$\;
+                Halve $\alpha$\;
+            }
+            Set $U = U^\prime$\;
+        }
+        Set $U^\star = U$\;
+    \end{algorithm}
+\end{figure}
+
+Finally, Algorithm \ref{alg:rh} implements the previously-discussed receding-horizon control logic. Its purpose is to iteratively apply the DDP algorithm to the system, identifying the best the control input at each time step in function of on-line measurements of the state.
+
+\begin{figure}[H]
+    \centering
+    \begin{algorithm}[H]
+        \caption{Receding-horizon control}
+        \label{alg:rh}
+        \setstretch{1.1}
+        Initialize $U_{\text{init}} = \{0\}_{i=0}^{N-1}$\;
+
+        \Repeat{termination condition} {
+            Measure the current state $x$\;
+            Perform a DDP iteration $U^\star = \textit{ddp}(x, U_{\text{init}})$\;
+            Apply the first control input $u^{\star,0}$ to the system\;
+            Set $U_{\text{init}} = \{u^{\star,i}\}_{i=1}^{N-1}$\;
+            Append $\{u^{\star,N}\}$ to $U_{\text{init}}$\;
+        }
+    \end{algorithm}
+\end{figure}

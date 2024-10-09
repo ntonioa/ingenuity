@@ -1,0 +1,53 @@
+\documentclass{article}
+\usepackage{multicol}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage[sorting=none]{biblatex}
+\usepackage{titlesec}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{mathtools}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+% \usepackage{bbm}
+\usepackage{setspace}
+
+\addbibresource{references.bib}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+\numberwithin{equation}{section}
+\geometry{margin=0.9in}
+% \titleformat{\section}{\large\bfseries\scshape}{\thesection}{1em}{}
+% \titleformat{\subsection}{\normalfont\bfseries\scshape}{\thesubsection}{1em}{}
+% \titleformat{\subsubsection}{\small\bfseries\scshape}{\thesubsubsection}{1em}{}
+
+\title{\large Course of Control Problems in Robotics \\ \LARGE Control of underactuated robots via input-constrained receding-horizon differential dynamic programming}
+\author{Simone Orelli\\1749732 
+\and Antonio Rapuano\\2044902
+\and Dhaval Shukla \\2047562 \and \textit{DIAG Department}\\ \textit{University of Rome “La Sapienza”}\\ $[$surname$]$.$[$id number$]$@studenti.uniroma1.it}
+\date{October 2024}
+
+\begin{document}
+    \maketitle
+    \thispagestyle{empty}
+        \begin{multicols}{2}
+            \vfill\null\null
+        \input{sections/abstract.tex}
+        \vfill\null
+        \columnbreak
+        \tableofcontents
+
+        \newpage
+        \pagenumbering{arabic}
+        \input{sections/introduction.tex}
+        \input{sections/ddp.tex}
+        \input{sections/optimal_controller.tex}
+        \input{sections/control_underactuated.tex}
+        \input{sections/conclusion.tex}
+        \printbibliography
+    \end{multicols}
+\end{document}

@@ -1,0 +1,9 @@
+\section{Conclusion}
+
+This paper presents a comprehensive approach to the control of underactuated robots using input-constrained receding-horizon Differential Dynamic Programming. The study focuses on the pendubot and the acrobot, which are exemplary underactuated systems that highlight the challenges and advantages of such control strategies.
+
+The DDP algorithm, renowned for its efficiency in handling nonlinear systems, is adapted to accommodate hard input constraints through three primary methods: naive clamping, squashing functions, and constrained quadratic programming. Among these, the constrained quadratic programming approach proves superior, effectively managing the swing-up problem of both robots while adhering to input constraints. Moreover, the implementation of a receding-horizon strategy, akin to Model Predictive Control, further enhances the real-time applicability of the DDP algorithm. 
+
+Simulation results validated the effectiveness of the proposed method. Whereas naive clamping and squashing functions failed to achieve the desired swing-up motions (because the first method causes a blockage of some search directions, while the second one introduces unrequired and harmful nonlinearities), the constrained quadratic programming method managed to attain the objective, demonstrating both accuracy and efficiency. These simulations not only confirmed the theoretical advantages but also underscored the practical feasibility of the approach. 
+
+In summary, the research illustrates that input-constrained receding-horizon DDP is a robust and efficient method for controlling underactuated robots. It effectively balances the need for constraint satisfaction with the performance demands of nonlinear control tasks. Future work could extend this approach to more complex systems and explore integration with other control methodologies to further improve robustness and adaptability.

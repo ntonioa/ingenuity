@@ -1,0 +1,112 @@
+\section{Differential dynamic programming}
+This section provides a brief overview of the Differential Dynamic Programming (DDP) algorithm. Part of what follows is reprised and recast mostly from \cite{tassa07}.
+
+\subsection{Optimal control problem}
+The numerical implementation of the DDP algorithm is constructed on a time-discrete optimal control problem that encodes both the dynamics of the system and the control objective.
+
+One possible way for the mathematical model to be discretized is to use the well-known forward Euler method. \\
+Given a state vector $x$, a control input $u$, and the time step $T$, the discretized dynamics are given by:
+\begin{equation}
+    x^{i+1} = F(x^i, u^i) = x^i + T f(x^i, u^i), \label{eq:dyn}
+\end{equation}
+where $f(x, u)$ is the continuous-time dynamics of the system.
+
+The cost function to minimize comes from the sum of the running cost $l(x, u)$ and the terminal cost $l_f(x)$. Simple and common choices for these functions are quadratic forms.\\
+Accordingly to \ref{eq:dyn}, over a control horizon of duration $N$, the state sequence $X = {\{x^i\}_{i=0}^{N}}$ is uniquely identified by the initial state $x^0$ and the control sequence $U = {\{u^i\}_{i=0}^{N-1}}$. Therefore, the total cost is given by:
+\begin{equation}
+    J(x^0, U) = \sum_{i=0}^{N-1} l(x^i, u^i) + l_f(x^N) \label{eq:cost}
+\end{equation}
+
+In light of the above, the optimal control problem we will be solving is the following.
+\begin{equation*}
+    \begin{aligned}
+        \min_U & \quad J(x^0, U) = \sum_{i=0}^{N-1} l(x^i, u^i) + l_f(x^N) \\
+        \text{s.t.} & \quad x^{i+1} = F(x^i, u^i), \quad \;\; i = 0, \ldots, N-1
+    \end{aligned}
+\end{equation*}
+where the optimal control sequence $U^*$ is the one to feed to the system.\\
+Notice that the DDP algorithm alone does not allow to enforce a constraint on the final state, meaning that the terminal cost is crucial to guide the system towards the desired equilibrium.
+
+\subsection{Local dynamic programming}
+The DDP algorithm plays around the so-called \textit{value} function, defined as the minimum cost-to-go from time $i$ to the end of the horizon:
+\begin{equation*}
+    V^i(x^i) = \min_{U^i} \left\{ \sum_{j=i}^{N-1} l(x^j, u^j) + l_f(x^N) \right\},
+\end{equation*}
+where $U^i = \{u^j\}_{j=i}^{N-1}$ is the control sequence from time $i$ to the end of the horizon. In particular:
+\begin{equation}
+    V^N(x^N) = l_f(x^N). \label{eq:vf_N}
+\end{equation}
+According to Bellman's principle of optimality \cite{bellman} and using \ref{eq:dyn}, the value function can be rewritten as\footnote{For the sake of brevity, we henceforth omit the time index $i$ and denote by $V^\prime$ the value referring to the next instant $i+1$.}:
+\begin{equation*}
+    V(x) = \min_{u} \left\{ l(x, u) + V^\prime(F(x, u)) \right\}.
+\end{equation*}
+We call \textit{Q-function} the minimization argument:
+\begin{equation}
+    Q(x, u) = l(x, u) + V^\prime(F(x, u)), \label{eq:qfun}
+\end{equation}
+leading to:
+\begin{equation}
+    V(x) = \min_{u} Q(x, u). \label{eq:vfun}
+\end{equation}
+
+\subsection{Quadratic approximation}
+If we consider a nominal state-control pair $(\overline{x}, \overline{u})$, the Q-function can be approximated by a second-order Taylor expansion around these:
+\begin{gather}\label{eq:qfun_taylor}
+    Q(\overline{x}+\delta x, \overline{u}+\delta u) \approx Q(\overline{x}, \overline{u}) + Q_x^\top(\overline{x}, \overline{u}) \delta x\;+ \nonumber \\
+    +\;Q_u^\top(\overline{x}, \overline{u}) \delta u + \frac{1}{2} \begin{bmatrix} \delta x \\ \delta u \end{bmatrix}^\top \begin{bmatrix}Q_{xx} & Q_{xu} \\ Q_{ux}  & Q_{uu} \end{bmatrix}(\overline{x}, \overline{u}) \begin{bmatrix} \delta x \\ \delta u \end{bmatrix}.
+\end{gather}
+The values of the gradient and Hessian of the Q-function can be computed by expanding also \ref{eq:qfun} and equating the coefficients of the same order. Therefore, we get\footnote{Once again for brevity, we neglect the dependence on the nominal state-control pair $(\overline{x}, \overline{u})$.}:
+\begin{align}
+    Q_x &= l_x + V^{\prime\top}_x F_x, \label{eq:qx} \\ 
+    Q_u &= l_u + V^{\prime\top}_x F_u, \\
+    Q_{xx} &= l_{xx} + F_x^\top V^\prime_{xx} F_x + V^\prime_x F_{xx},\\
+    Q_{uu} &= l_{uu} + F_u^\top V^\prime_{xx} F_u + V^\prime_x F_{uu},\\
+    Q_{xu} &= l_{xu} + F_x^\top V^\prime_{xx} F_u + V^\prime_x F_{xu}. \label{eq:qxu}
+\end{align}
+The optimal control adjustment in response to a state deviation $\delta x$ is obtained by minimizing the Q-function with respect to $\delta u$, yielding the local state-affine policy:
+\begin{equation}
+    \delta u^\star = k + K \delta x, \label{eq:deltau_star}
+\end{equation}
+with coefficients given by:
+\begin{align}
+    k &= -Q_{uu}^{-1} Q_u, \label{eq:k} \\ 
+    K &= -Q_{uu}^{-1} Q_{ux}. \label{eq:K}
+\end{align}
+Similarly, the we can also expand the value function:
+\begin{equation*}
+    V(\overline{x} + \delta x) \approx V(\overline{x}) + V_x^\top(\overline{x}) \delta x + \frac{1}{2} \delta x^\top V_{xx}(\overline{x}) \delta x.
+\end{equation*}
+Using \ref{eq:vfun} with $x = \overline{x}+ \delta x$ and $u = \overline{u} + \delta u$, and plugging \ref{eq:deltau_star} into \ref{eq:qfun_taylor}, we can extract the gradient and Hessian of the value function, whose expressions, once simplified according to \cite{tassa12}, are:
+\begin{align}
+    V_x &= Q_x - K^\top Q_{uu} k,\label{eq:vx} \\ 
+    V_{xx} &= Q_{xx} - K^\top Q_{uu} K. \label{eq:vxx}
+\end{align}
+
+\subsection{Backward and forward sweeps}
+Given an initial control sequence $U_{\text{init}}$, the first real step of the algorithm is to compute the corresponding state evolution $X_{\text{init}}$ by recursively applying \ref{eq:dyn}.\\
+We can consider these as the nominal trajectories, making it possible to compute $V^N(\overline{x}^N)$ according to \ref{eq:vf_N}, which unlocks the ability to calculate the coefficients of the expansion of the Q-function around the pair $(\overline{x}^{N-1}, \overline{u}^{N-1})$ using \ref{eq:qx} - \ref{eq:qxu}. These form the gains $k$ in \ref{eq:k} and $K$ in \ref{eq:K}, which in turn allow us to find the coefficients of the expansion of the value function $V(\cdot)$ around $(\overline{x}^{N-1}, \overline{u}^{N-1})$ with \ref{eq:vx} and \ref{eq:vxx}, and so on until the initial state $x^0$ is reached. This phase is called the \textit{backward sweep}.\\
+Subsequently, the \textit{forward sweep} consists of recursively applying the local state-affine policy \ref{eq:deltau_star} to the state deviation $\delta x^i = x^i - \overline{x}^i$, exploiting once again \ref{eq:dyn} to obtain new control and state sequences from the previous (nominal) ones using:
+\begin{align}
+    x^0 &= \overline{x}^0, \label{eq:x0} \\
+    u^i &= \overline{u}^i + k^i + K^i (x^i - \overline{x}^i). \label{eq:u_update}
+\end{align}
+The alternation of backward and forward sweeps goes on until a satisfactory solution is found.
+
+\subsection{Regularization}
+In this part, we focus on common weaknesses of DDP and how they can be addressed in the implementation phase.
+
+\subsubsection{Levenberg-Marquardt parameter}
+The Hessian of the Q-function $Q_{uu}$ is required to be positive definite in order to guarantee the existence of a minimum. To ensure this, a regularization term is added, and the resulting modified Hessian $\tilde{Q}_{uu}$ is then used to compute the gains $k$ and $K$. The regularization term is proportional to the identity matrix and is weighted by a scalar $\mu$, that plays the role of a Levenberg-Marquardt parameter:
+\begin{equation}
+    \tilde{Q}_{uu} = Q_{uu} + \mu I. \label{eq:q_uu_reg}
+\end{equation}
+This corresponds to adding a quadratic term around the current control sequence, which makes the steps more conservative. \\
+Further details can be found in \cite{tassa12}.
+
+\subsubsection{Line search}
+At each forward sweep, an issue may arise if the newly found trajectory significantly diverges from the previous one, resulting in a substantial error in the quadratic approximation. To prevent this, a line search is performed to find the optimal step size $\alpha$ that minimizes the cost along the direction of the control adjustment. This is done by iteratively reducing (usually halving) the step size until the cost of the proposed trajectory decreases sufficiently (i.e., it becomes smaller than the cost of the nominal one), and then performing the step. Logically, if $\alpha$ becomes too small it means that the optimal trajectory has been found.\\
+The implementation of the line search is done by integrating $\alpha$ in the forward sweep, so that the control sequence is updated as:
+\begin{equation}
+    u^i = \overline{u}^i + \alpha k^i + K^i (x^i - \overline{x}^i), \label{eq:u_update_alpha}
+\end{equation}
+indeed replacing \ref{eq:u_update}. Notice that the feedback term is not affected by the line search.
