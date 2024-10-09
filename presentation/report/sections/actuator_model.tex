@@ -1,0 +1,16 @@
+\subsection{Actuator dynamics}
+The control signals $\omega_u$, $\omega_l$, $\alpha$ and $\beta$ are not instantly translated into the corresponding angular velocities or swashplate tilt angles: non-idealities arise since the physical components of Ingenuity are set in motion by actuators (typically electrical motors). \\
+In reality, often actuators integrate low-level closed loops (sometimes even analog, e.g. through potentiometers) whose dynamics may be overlooked in the high-level control system design.
+To account for the effect of these components in our model and simulations, however, it is appropriate to model each of the four input channels as double integrators:
+\begin{align*}
+    G_i(s) = \frac{1}{s^2}, \quad i = 1, 2, 3, 4.
+\end{align*}
+In feedforward, the trivial solution is to control the double integrators with (physically realizable) controllers such as:
+\begin{align*}
+    K_i(s) = \frac{s^2}{(1 + s \, T_i)^2}, \quad i = 1, 2, 3, 4,
+\end{align*}
+with $T_i$ being a (small enough) time constant that can be tuned to match the actual dynamics of the actuators. \\
+This means that, at the end of the day, the resulting actuator open-loop transfer functions are equal to:
+\begin{align*}
+    L_i(s) = G_i(s) \, K_i(s) = \frac{1}{(1 + s \, T_i)^2}, \quad i = 1, 2, 3, 4.
+\end{align*}

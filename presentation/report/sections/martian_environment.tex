@@ -1,0 +1,22 @@
+\subsection{Martian environment}
+Even though the Martian gravity is only about $38\%$ of the Earth's, its thin atmosphere, composed mainly of carbon dioxide with a ground-level pressure of about $0.6\%$ of the Earth's, makes it difficult for aerial vehicles to fly. The athmospheric model is split in two zones: below and above the altitude of $\SI{7000}{\meter}$. Since Ingenuity only performs low level flights, we are interested in the parameters of the lower layer, whose expressions (with respect to altitude) are summarized in Table \ref{tab:martian_environment}.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{Parameter} & \textbf{Sym} & \textbf{Value} \\
+        \hline
+        \hline
+        Gravity & $g$ & \SI{3.71}{\meter\per\square\second} \\
+        \hline
+        Temperature & $T$ & $-242.1-9.98 \times 10^{-4} \, h$\;\SI{}{\kelvin} \\
+        \hline
+        Pressure & $p$ & $0.699 \, e^{-0.9 \times 10^{-5} h}$\;\SI{}{\kilo\pascal} \\
+        \hline
+        Air density & $\rho$ & $p/(0.192\;T)$\;\SI{}{\kilogram\per\cubic\meter} \\
+        \hline
+    \end{tabular}
+    \caption{Martian environment parameters for altitude $h< \SI{7000}{\meter}$.}
+    \label{tab:martian_environment}
+\end{table}

@@ -1,0 +1,29 @@
+\section{Simulation}
+
+The main parameters of the helicopter structure model are summarized in Table \ref{tab:ingenuity_parameters}.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{Parameter} & \textbf{Symbol} & \textbf{Value} \\
+        \hline
+        \hline
+        Mass & $m$ & \SI{1.8}{\kilogram} \\
+        \hline
+        Rotor diameter & $2\,r$ & \SI{1.2}{\meter} \\
+        \hline
+        Blade chord & $c$ & \SI{0.24}{\meter} \\
+        \hline
+        \begin{tabular}{@{}c@{}}COM - upper\\rotor distance\end{tabular} & $d_{cm, u}$ & \SI{0.10}{\meter} \\
+        \hline
+        \begin{tabular}{@{}c@{}}COM - lower\\rotor distance\end{tabular} & $d_{cm, l}$ & \SI{0.05}{\meter} \\
+        \hline
+        Inertia & $I$ & \begin{tabular}{@{}c@{}}$diag(0.210, 0.288, $\\$0.278)$\,\SI{}{\kilogram\square\meter}\end{tabular} \\
+        \hline
+    \end{tabular}
+    \caption{Structural parameters of the Ingenuity model.}
+    \label{tab:ingenuity_parameters}
+\end{table}
+
+\input{sections/martian_environment.tex}

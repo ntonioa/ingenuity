@@ -1,0 +1,99 @@
+
+We start the backstepping procedure with the definition of the position error in the body reference frame:
+\begin{align*}
+    \delta_1 := R^T(P_d-P)
+\end{align*}
+Its time derivative is given by
+\[\frac{d}{dt}\delta_1=-\Omega^b \times R^T(P_d-P)+ R^T(\dot{P_d}-\frac{d}{dt}P)= \]\[=-\Omega^b \times \delta_1+R^T(\dot{P_d}-V^b)\]
+From this, we identify the speed error in the body reference frame
+\[\delta_2=+R^T(\dot{P_d}-V^b)\]
+Differentiating we obtain
+\[\frac{d}{dt}\delta_1=-\Omega^b \times R^T\dot{P_d}+R^T\ddot{P_d}-\frac{d}{dt}V^b=\]\[=-\Omega^b \times R^T\dot{P_d}+R^T\ddot{P_d}-\frac{R^TF_g^i}{m}-\Omega^b \times V^b+\frac{u}{m}=\]\[=-\Omega^b \times\delta_2+R^T\ddot{P_d}-\frac{R^TF_g^i}{m}-\frac{u}{m}\]
+Define by $V_1$ the first Lyapunov function as
+\[V_1=\frac{1}{2}(\delta_1+\lambda \delta_2)^T(\delta_1+\lambda \delta_2)+\frac{1}{2}\delta_1^T\delta_1 \:, \quad \lambda>0\]
+The time derivative is 
+\[
+\frac{d}{dt}V_1=(\delta_1+\lambda \delta_2)^T 
+\Bigg[-\Omega^b \times\delta_1+\delta_2+ \lambda\Bigg(-\Omega^b \times\delta_2+\]\[+R^T\ddot{P_d}-\frac{F}{m}\Bigg)\Bigg]+\delta_1^T\left(-\Omega \times \delta_1 +\delta_2\right)=\]\[=(\delta_1+\lambda \delta_2)^T\left(\delta_2+\lambda R^T\ddot{P_d}-\frac{\lambda F}{m}\right)+\delta_1^T\delta_2 \]
+The desired value of the actual force, considered as virtual input gives
+\[\left(\frac{\lambda}{m}F\right)^*=\delta_1+\lambda \delta_2+2\delta_2+\lambda R^T\ddot{P_d}\]
+From which we get 
+\[\frac{d}{dt}V_1=-(\delta_1+\lambda \delta_2)^T(\delta_1+\lambda \delta_2)-\lambda\delta_2^T\delta_2+\]\[+(\delta_1+\lambda \delta_2)^T\frac{\lambda}{m}(F^*-F)\]
+where the error between the virtual force
+and the actual force $\delta_3=(\frac{\lambda}{m}F)^*-\frac{\lambda}{m}F $ appears.\\
+Its derivative is 
+\[\frac{d}{dt}\delta_3=\frac{d}{dt}\left(\frac{\lambda}{m}F\right)^*-\frac{d}{dt}\left(\frac{\lambda}{m}F\right)=\]\[=
+\frac{d}{dt}(\delta_1+\lambda \delta_2+2\delta_2+\lambda R^T\ddot{P_d})-\frac{\lambda}{m}\frac{d}{dt}(R^TF_g^i+u)=\]\[=
+-\Omega^b \times \delta_1+\delta_2+(\lambda+2)\left(-\Omega^b \times \delta_2+R^T\ddot{P_d}-\frac{F}{m}\right)+\]\[+\lambda R^T\dddot{P_d}-\lambda\Omega^b \times R^T\ddot{P_d}+\frac{\lambda}{m}\Omega^b \times R^TF_g^i-\frac{\lambda}{m}\left(\frac{d}{dt}u\right)=\]\[=
+-\Omega^b \times \left(\delta_1+\lambda \delta_2+2\delta_2+\lambda R^T\ddot{P_d}-\frac{\lambda}{m} R^TF_g^i-\frac{\lambda}{m}u\right)\]\[-\frac{\lambda}{m}\Omega^b \times u+\delta_2+(\lambda+2)\left(R^T\ddot{P_d}-\frac{F}{m}\right)+\]\[+\lambda R^T\dddot{P_d}-\frac{\lambda}{m}\left(\frac{d}{dt}u\right)=
+-\Omega^b \times \delta_3 -\frac{\lambda}{m}\Omega^b \times u+\]\[+\frac{\lambda+2}{\lambda}\left(\lambda R^T\ddot{P_d}-\frac{\lambda}{m}F+\delta_1+\lambda \delta_2+2\lambda_2\right)+\]\[-\frac{\lambda+2}{\lambda}\left(\delta_1+\lambda \delta_2+2\lambda_2\right)+\delta_2+\lambda R^T\dddot{P_d}-\frac{\lambda}{m}\left(\frac{d}{dt}u\right)=\]\[=
+-\Omega^b \times \delta_3 -\frac{\lambda}{m}\Omega^b \times u+\frac{\lambda+2}{\lambda}\delta_3-\frac{\lambda+2}{\lambda}\delta_1-\frac{(\lambda+2)^2-\lambda}{\lambda}\delta_2+\]\[+\lambda R^T\dddot{P_d}-\frac{\lambda}{m}\left(\frac{d}{dt}u\right)
+\]
+Regarding the yaw control, we have the error
+\[\epsilon_2 := w_{3,d}-w_3\]
+and its derivative
+\[\frac{d}{dt}\epsilon_2=\dot{w_{3,d}}-\frac{d}{dt}w_3\]
+The second Lyapunov function is then
+\[V_2=\frac{1}{2}\delta_3^T\delta_3+\frac{1}{2}\epsilon_2^2\]
+Differentiating we get
+\[\frac{d}{dt}V_2=\delta_3^T\Bigg[-\Omega^b \times \delta_3-\frac{\lambda}{m}\Omega^b \times u+\frac{\lambda+2}{\lambda}\delta_3-\frac{\lambda+2}{\lambda}\delta_1+\]\[-\frac{(\lambda+2)^2-\lambda}{\lambda}\delta_2+\lambda R^T\dddot{P_d}-\frac{\lambda}{m}\left(\frac{d}{dt}u\right)\Bigg]+\epsilon_2\left(\dot{w_{3,d}}-\frac{d}{dt}w_3\right)\]
+Since $\frac{d}{dt}u$ and $\Omega$ are completely decoupled we can affect directly the input $\frac{d}{dt}u$. In particular we impose
+\[\frac{d}{dt}u_3=\frac{m}{\lambda}\begin{bmatrix}
+0 & 0 &1 \end{bmatrix}\Bigg(\frac{\lambda+2}{\lambda}\delta_3-\frac{\lambda+2}{\lambda}\delta_1-\frac{\lambda^2+3\lambda+4}{\lambda}\delta_2+\]\[+\lambda R^T\dddot{P_d}+(\delta_1+\lambda\delta_2)+K_1\delta_3\Bigg)\]
+While we choose the control inputs
+\[\left(\frac{\lambda}{m}\Omega^b \times u\right)^*=
+\begin{bmatrix}
+    1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 0
+\end{bmatrix}\Bigg(\frac{\lambda+2}{\lambda}\delta_3-\frac{\lambda+2}{\lambda}\delta_1+\]\[-\frac{\lambda^2+3\lambda+4}{\lambda}\delta_2+\lambda R^T\dddot{P_d}+(\delta_1+\lambda\delta_2)+K_1\delta_3\Bigg)\]
+\[\left(\frac{d}{dt}w_3\right)^*=\frac{d}{dt}w_3+K_2\epsilon_2 \:\:, \quad K_1,K_2>0\]
+
+The derivative of $V_2$ becomes
+\[\frac{d}{dt}V_2=-K_1\delta_3^T\delta_3-\delta_3^T(\delta_1+\lambda\delta_2)+\delta_3^T\Bigg[\Bigg(\frac{\lambda}{m}\Omega^b \times u\Bigg)^*+\]\[-\frac{\lambda}{m}\Omega^b \times u\Bigg]-K_2\epsilon_2^2+\epsilon_2\left(\left(\frac{d}{dt}w_3\right)^*-\dot{w_3}\right)\]
+\\
+The new vector error associated with
+the speed rotations in roll and pitch is 
+\[\delta_4:=\left(\frac{\lambda}{m}\Omega^b \times u\right)^*-\frac{\lambda}{m}\Omega^b \times u\]
+Its derivative is
+\[\frac{d}{dt}\delta_4=\frac{d}{dt}\left(\frac{\lambda}{m}\Omega^b \times u\right)^*-\frac{\lambda}{m}\left(\frac{d}{dt}\Omega^b\right)\times u+\]\[-\frac{\lambda}{m}\Omega^b \times \left(\frac{d}{dt}u\right)\]
+\\
+The yaw speed error is instead 
+\[\epsilon_3:=\dot{w_3}^*-\frac{d}{dt}w_3\]
+and its derivative
+\[\frac{d}{dt}\epsilon_3=\frac{d}{dt}(\dot{w_{3,d}}+K_2\epsilon_2)-\frac{d^2}{dt^2}w_3=\]\[=\ddot{w_{3,d}}+K_2\left(\dot{w_{3,d}}-\frac{d}{dt}w_3\right)-\frac{d^2}{dt^2}w_3\]
+The last Lyapunov function is given by
+\[V_3=\frac{1}{2}\delta_4^T\delta_4+\frac{1}{2}\epsilon_3^2\]
+Taking the time derivative it yields
+\[\frac{d}{dt}V_3=\delta_4^T\Bigg[\frac{d}{dt}\Bigg(\frac{\lambda}{m}\Omega^b \times u\Bigg)^*+\]\[-\frac{\lambda}{m}\Bigg(\frac{d}{dt}\Omega^b\Bigg) \times u-\frac{\lambda}{m}\Omega^b \times \Bigg(\frac{d}{dt}u\Bigg) \Bigg]+\]\[+\epsilon_3\left[\ddot{w_{3,d}}+K_2\left(\dot{w_{3,d}}-\frac{d}{dt}w_3\right)-\frac{d^2}{dt^2}w_3\right]\]
+
+At this point we choose
+\[\frac{d^2}{dt^2}w_3= \ddot{w_{3,d}}+K_2\Bigg(\dot{w_{3,d}}-\frac{d}{dt}w_3\Bigg)+K_4\epsilon_3+\epsilon_2\]
+\\
+\[\frac{\lambda}{m}\left(\frac{d}{dt}\Omega^b\right) \times u=\frac{d}{dt}\left(\frac{\lambda}{m}\right)^*-\frac{\lambda}{m}\Omega^b\times\left(\frac{d}{dt}u\right)+\]\[+\begin{bmatrix}
+    1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 0 
+\end{bmatrix}\delta_3+K_3\delta_4\]
+
+In particular from the latter we would have
+\[\frac{\lambda}{m}\begin{bmatrix}
+    \left(\frac{d}{dt}\Omega_2^b\right)u_3 \\ -\left(\frac{d}{dt}\Omega_1^b\right)u_3
+\end{bmatrix}=\begin{bmatrix}
+    1 & 0 & 0 \\ 0 & 1 & 0
+\end{bmatrix}\Bigg[\frac{d}{dt}\Bigg(\frac{\lambda}{m}\Omega^b\times u\Bigg)^*+\]\[-\frac{\lambda}{m}\Omega^b\times \dot u +\delta_3+K_3\delta_4\Bigg]\]
+and so in the end
+\[\frac{d}{dt}\Omega_2^b=\frac{m}{\lambda u_3}\begin{bmatrix}
+    1 & 0 & 0
+\end{bmatrix}\Bigg[\frac{d}{dt}\left(\frac{\lambda}{m}\Omega^b\times u\right)^*-\frac{\lambda}{m}\Omega^b \times \dot u +\delta_3+K_3\delta_4\Bigg]\]
+
+\[\frac{d}{dt}\Omega_1^b=-\frac{m}{\lambda u_3}\begin{bmatrix}
+    0 & 1 & 0
+\end{bmatrix}\Bigg[\frac{d}{dt}\left(\frac{\lambda}{m}\Omega^b\times u\right)^*-\frac{\lambda}{m}\Omega^b \times \dot u +\delta_3+K_3\delta_4\Bigg]\]
+
+In this way the derivative of the third Lyapunov function becomes
+\[\frac{d}{dt}V_3=-K_4\epsilon_3^2-\epsilon_2\epsilon_3-\delta_4^T\delta_3-K_3\delta_4^T\delta_4\]
+\\
+Summing up the three Lyapunov functions we get
+\[L=V_1+V_2+V_3=\frac{1}{2}(\delta_1+\lambda\delta_2)^T(\delta_1+\lambda\delta_2)+\]\[+\frac{1}{2}\delta_1^T\delta_1+\frac{1}{2}\delta_3^T\delta_3+\frac{1}{2}\epsilon_2^2+\frac{1}{2}\delta_4^T\delta_4+\frac{1}{2}\epsilon_3^2\]
+Whose derivative is 
+\[\frac{d}{dt}L=-(\delta_1+\lambda\delta_2)^T(\delta_1+\lambda\delta_2)-\lambda\delta_2^T\delta_2+(\delta_1+\lambda\delta_2)^T\delta_3+\]\[-K_1\delta_3^T\delta_3-\delta_3^T(\delta_1+\lambda\delta_2)+\delta_3^T\delta_4-K_2\epsilon_2^2+\epsilon_2\epsilon_3-K_4\epsilon_3^2-\epsilon_2\epsilon_3+\]\[-\delta_4^T\delta_3-K_3\delta_4^T\delta_4=
+-(\delta_1+\lambda\delta_2)^T(\delta_1+\lambda\delta_2)-\lambda\delta_2^T\delta_2-K_1\delta_3^T\delta_3+\]\[-K_2\epsilon_2^2-K_4\epsilon_3^2-K_3\delta_4^T\delta_4\]
+
+We can see that the overall Lyapunov function is monotonically decreasing and thus the control objective is achieved.

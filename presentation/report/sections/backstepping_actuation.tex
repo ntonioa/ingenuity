@@ -1,0 +1,41 @@
+\subsection{Actuation}
+This section is the analogue of Section \ref{sec:fbl_actuation} for the backstepping controller. 
+\\The backstepping procedure yields the values of the time derivative of the lift $\frac{d}{dt} u$ and the desired angular velocity dynamics $\frac{d}{dt}\Omega^b$, which must be converted into the actual inputs of the robot $\omega_u$, $\omega_l$, $\alpha$, and $\beta$.
+
+For simplicity, let us use the following notation:
+\begin{align*}
+    \tau \coloneq \tau_{tot}^b.
+\end{align*}
+Assuming that $\alpha$ and $\beta$ are small:
+\begin{align*}
+    T_{(\alpha,\beta)}\approx \begin{bmatrix}
+        \alpha\\\beta\\1
+    \end{bmatrix},
+\end{align*}
+by \ref{eq:force_norm}, \ref{eq:force}, \ref{eq:torque_due_force}, \ref{eq:reaction_torque} and \ref{eq:torque}, we obtain a system of four equations in four unknowns:
+\begin{equation*}
+    \left\{\begin{array}{@{}l@{}}
+\begin{bmatrix}
+    \tau_1\\\tau_2\\\tau_3\\
+\end{bmatrix}=\begin{bmatrix}
+    -\beta \, (K_l-K_d) \, (d_{cm,u} \, \omega_u^2+d_{cm,l} \, \omega_l^2)\\
+    \alpha \, (K_l-K_d) \, (d_{cm,u} \, \omega_u^2+d_{cm,l} \, \omega_l^2)\\
+    0.02 \, (K_l-K_d) \, (\omega_u^2-\omega_l^2)
+\end{bmatrix} \\
+u_3=(K_l-K_d)(\omega_u^2+\omega_l^2)
+
+\end{array}\right. ,
+     \end{equation*}
+whose (real) solutions exist only if the following condition is satisfied:
+$$|\tau_3| \leq \frac{u_3}{50}.$$
+In that case, the solutions are:
+\begin{gather*}
+    w_u=\sqrt{\frac{u_3+50 \, \tau_3}{2(K_l-K_d)}}\\
+    w_l=\sqrt{\frac{u_3-50 \, \tau_3}{2(K_l-K_d)}}\\
+    \alpha=\frac{2\tau_2}{(d_{cm,l}+d_{cm,u}) \, u_3+50 \, (d_{cm,u}-d_{cm,l}) \, \tau_3}\\
+    \beta=\frac{-2\tau_1}{(d_{cm,l}+d_{cm,u}) \, u_3+50 \, (d_{cm,u}-d_{cm,l}) \, \tau_3},
+\end{gather*}
+where $\tau_1$, $\tau_2$ and $\tau_3$ are the three components of $\tau$, whose value comes from \ref{eq:fbl_model}:
+\begin{align*}
+    \tau=I\frac{d}{dt}\Omega^b + \Omega^b \times (I\Omega^b).
+\end{align*}
